@@ -28,7 +28,7 @@ Read `references/dotnet-compat.md` for how package validation and suppressions w
 Run from the repo root:
 
 ```bash
-# Last published tag
+# Last published tag (exits non-zero if no tags exist)
 git describe --tags --abbrev=0
 
 # Find the solution and csproj (exclude obj/ and test projects)
@@ -40,11 +40,22 @@ grep -rl "PackageValidationBaselineVersion" --include="*.csproj" .
 ```
 
 Extract:
-- `LAST_TAG` — e.g. `4.3.0` or `1.0.0-preview.0.2.0`
+- `LAST_TAG` — e.g. `4.3.0` or `1.0.0-preview.0.2.0`. If `git describe` exits non-zero, there are no tags — this is a first release (see below).
 - `PACKAGE_NAME` — from `<PackageId>` in csproj (falls back to assembly name)
 - `BASELINE_VERSION` — current `PackageValidationBaselineVersion` value (if present — skip Steps 4–5 and 7 if absent)
 - `CSPROJ_PATH` — full path to the packable csproj
 - `SLN_OR_CSPROJ_DIR` — directory to run `dotnet` commands from (solution dir if a `.sln` exists, otherwise csproj dir)
+
+### First release (no tags yet)
+
+If no tags exist, ask the user:
+
+```
+No tags found — this looks like a first release.
+Would you like to start with a stable release (suggested: 0.1.0) or a preview release (suggested: 0.1.0-preview.0.1.0)?
+```
+
+Use the user's answer as `LAST_TAG = "(none)"` and skip the "changes since last tag" diff in Step 2 (show all commits instead). Proceed normally from Step 3 onward.
 
 Determine the current tag series (stable or preview) from `LAST_TAG`. See `references/versioning.md`.
 
@@ -100,7 +111,7 @@ dotnet restore <SLN_OR_CSPROJ_DIR>
 dotnet pack <CSPROJ_PATH> --configuration Release -p:PackageVersion=<CONFIRMED_TAG> --output /tmp/nuget-pack-check
 ```
 
-**If pack succeeds:** no breaking public API changes. Proceed to Step 6.
+**If pack succeeds:** no breaking public API changes. Skip Step 5 and proceed directly to Step 6.
 
 **If pack fails with compat errors:** capture the full error output. Extract the list of violations (they look like `CP0001`, `CP0002`, etc.). Proceed to Step 5.
 
@@ -157,7 +168,10 @@ Wait for explicit "proceed" / "merge it" before continuing.
 
 ### 5d. Merge the PR
 
+Wait for CI to pass, then merge:
+
 ```bash
+gh pr checks <PR_NUMBER> --watch
 gh pr merge <PR_NUMBER> --squash --delete-branch
 git checkout main
 git pull

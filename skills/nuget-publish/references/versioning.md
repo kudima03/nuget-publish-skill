@@ -5,7 +5,9 @@
 ### Stable
 Standard semver: `MAJOR.MINOR.PATCH`
 
-Examples: `1.0.0`, `4.3.0`, `5.0.1`
+For a first release, default to `0.1.0` unless the user specifies otherwise.
+
+Examples: `0.1.0`, `1.0.0`, `4.3.0`, `5.0.1`
 
 ### Pre-release (default convention)
 

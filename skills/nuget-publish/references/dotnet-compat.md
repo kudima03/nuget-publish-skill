@@ -47,9 +47,9 @@ The file looks like:
               xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
-    <Target>M:Pure.Primitives.Abstractions.IFoo.Bar</Target>
-    <Left>lib/net8.0/Pure.Primitives.Abstractions.dll</Left>
-    <Right>lib/net8.0/Pure.Primitives.Abstractions.dll</Right>
+    <Target>M:MyLibrary.IFoo.Bar</Target>
+    <Left>lib/net8.0/MyLibrary.dll</Left>
+    <Right>lib/net8.0/MyLibrary.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
 </Suppressions>
