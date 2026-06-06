@@ -1,4 +1,4 @@
 {
-  "name": "pure-claude-plugin",
-  "description": "Claude Code skills, commands, and hooks for Pure ecosystem repos."
+  "name": "nuget-publish-skill",
+  "description": "Claude Code skill and command for the NuGet publish workflow."
 }

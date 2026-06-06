@@ -2,7 +2,7 @@
 
 ## How package validation works
 
-Pure ecosystem projects set:
+Projects opt in with:
 ```xml
 <EnablePackageValidation>true</EnablePackageValidation>
 <PackageValidationBaselineVersion>X.Y.Z</PackageValidationBaselineVersion>
@@ -24,17 +24,16 @@ Common violation codes in error output:
 
 Errors look like:
 ```
-error CP0001: Member 'Pure.Primitives.Abstractions.IFoo.Bar' was removed from the public API
+error CP0001: Member 'MyLibrary.IFoo.Bar' was removed from the public API
 ```
 
 ## Generating suppressions
 
-Run from `./src`:
 ```bash
-dotnet pack --configuration Release \
+dotnet pack <CSPROJ_PATH> --configuration Release \
   -p:PackageVersion=<VERSION> \
   -p:GenerateCompatibilitySuppressionFile=true \
-  --output /tmp/pure-pack-suppress
+  --output /tmp/nuget-pack-suppress
 ```
 
 This writes (or overwrites) `CompatibilitySuppressions.xml` next to the csproj.
@@ -48,9 +47,9 @@ The file looks like:
               xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
-    <Target>M:Pure.Primitives.Abstractions.IFoo.Bar</Target>
-    <Left>lib/net8.0/Pure.Primitives.Abstractions.dll</Left>
-    <Right>lib/net8.0/Pure.Primitives.Abstractions.dll</Right>
+    <Target>M:MyLibrary.IFoo.Bar</Target>
+    <Left>lib/net8.0/MyLibrary.dll</Left>
+    <Right>lib/net8.0/MyLibrary.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
 </Suppressions>
@@ -64,7 +63,7 @@ To produce a human-readable summary for the PR body:
 
 Example PR bullet list:
 ```
-- **CP0001** — `IFoo.Bar` removed from public API (net7.0, net8.0, net9.0, net10.0)
+- **CP0001** — `IFoo.Bar` removed from public API (net8.0, net9.0)
 - **CP0003** — Abstract member `IBaz.Qux` added to interface (net8.0)
 ```
 
@@ -76,7 +75,7 @@ After a tag is pushed and the GitHub Actions publish completes, update `PackageV
 <PackageValidationBaselineVersion>NEW_VERSION</PackageValidationBaselineVersion>
 ```
 
-The baseline update PR must go through CI (which runs `dotnet build --no-restore -warnaserror` and `dotnet format --verify-no-changes`). Only merge after CI passes.
+The baseline update PR must go through CI. Only merge after CI passes.
 
 ## Important: suppression file must be on main before the tag
 

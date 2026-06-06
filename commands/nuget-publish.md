@@ -1,5 +1,5 @@
 ---
-description: "Run the full NuGet publish workflow for this Pure ecosystem repo: analyze changes, suggest version, check API compat, handle suppressions, push tag, update baseline."
+description: "Run the full NuGet publish workflow: analyze changes, suggest version, check API compat, handle suppressions, push tag, update baseline."
 ---
 
 # NuGet Publish
