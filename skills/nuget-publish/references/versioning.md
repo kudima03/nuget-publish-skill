@@ -1,4 +1,4 @@
-# Versioning Rules — Pure Ecosystem
+# Versioning Rules
 
 ## Tag formats
 
@@ -7,17 +7,30 @@ Standard semver: `MAJOR.MINOR.PATCH`
 
 Examples: `1.0.0`, `4.3.0`, `5.0.1`
 
-### Preview
+### Pre-release (default convention)
+
 Format: `STABLE_MAJOR.STABLE_MINOR.STABLE_PATCH-preview.PREV_MAJOR.PREV_MINOR.PREV_PATCH`
 
-The **first part** (`STABLE_MAJOR.STABLE_MINOR.STABLE_PATCH`) is the upcoming stable version this preview precedes.
-The **second part** (after `-preview.`) is the preview iteration version, also semver.
+The **first part** is the upcoming stable version this pre-release precedes.
+The **second part** (after `-preview.`) is the pre-release iteration, also semver.
 
 Examples:
-- `0.1.0-preview.0.1.0` — first preview for upcoming `0.1.0` stable
-- `0.1.0-preview.0.1.1` — second preview (patch fix) for upcoming `0.1.0`
-- `0.1.0-preview.0.2.0` — third preview with new additions for upcoming `0.1.0`
-- `1.0.0-preview.0.3.0` — preview for upcoming `1.0.0` with several preview iterations
+- `0.1.0-preview.0.1.0` — first preview for upcoming `0.1.0`
+- `0.1.0-preview.0.1.1` — patch fix in preview iteration
+- `0.1.0-preview.0.2.0` — new additions, stable target unchanged
+- `1.0.0-preview.0.3.0` — preview for upcoming `1.0.0`
+
+### Alternative pre-release styles (on demand)
+
+Only switch from the default if the user explicitly asks or if the project already uses a different convention:
+
+| Style | Example |
+|---|---|
+| Simple suffix | `1.0.0-beta`, `1.0.0-rc.1` |
+| Dated | `1.0.0-preview-20260101` |
+| Alpha/beta/rc progression | `1.0.0-alpha.1`, `1.0.0-beta.2`, `1.0.0-rc.1` |
+
+Detect an existing convention from previous tags before suggesting a different one.
 
 ---
 
@@ -39,7 +52,7 @@ The user may want to switch series (e.g., cut a stable release from a preview se
 |---|---|
 | Removed/changed public API member | **MAJOR** |
 | Breaking NuGet dependency update (dep major bump) | **MAJOR** |
-| New interface or new member on existing interface | **MINOR** |
+| New public type or member added | **MINOR** |
 | Non-breaking dep update (dep minor/patch bump) | **MINOR** |
 | Bug fix, CI, docs, tooling only | **PATCH** |
 
