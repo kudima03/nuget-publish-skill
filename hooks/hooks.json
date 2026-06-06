@@ -1,0 +1,15 @@
+{
+  "description": "Pure ecosystem hooks: auto-format .cs files after Claude stops",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/format.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
