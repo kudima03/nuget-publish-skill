@@ -67,23 +67,27 @@ Determine the current tag series (stable or preview) from `LAST_TAG`. See `refer
 # All commits
 git log ${LAST_TAG}..HEAD --oneline
 
-# Changed files
+# All changed files
 git diff --name-only ${LAST_TAG}..HEAD
+
+# Files changed inside the packable project directory
+CSPROJ_DIR=$(dirname <CSPROJ_PATH>)
+git diff --name-only ${LAST_TAG}..HEAD -- "${CSPROJ_DIR}"
 
 # Package reference changes (dependency bumps)
 git diff ${LAST_TAG}..HEAD -- "*.csproj"
 ```
 
-**Early exit — nothing to release:** If both `git log` and `git diff` produce no output, stop immediately and tell the user:
+**Early exit — no project changes to release:** If `git diff --name-only ${LAST_TAG}..HEAD -- "${CSPROJ_DIR}"` produces no output, there are no changes inside the packable project — even if other commits or files (CI, docs, repo tooling) changed. Stop immediately and tell the user:
 
 ```
-No commits or file changes found since <LAST_TAG>.
+No changes found in <CSPROJ_DIR> since <LAST_TAG>.
 Nothing to release. Exiting.
 ```
 
 Do not proceed to Step 3.
 
-Summarize:
+Summarize (using only the project-scoped diff):
 - What interfaces or members were added, changed, or removed
 - Whether any NuGet dependency was bumped, and whether the bump is a **major** (breaking) version bump
 - Whether there are only infrastructure/CI/doc changes (patch-only)
