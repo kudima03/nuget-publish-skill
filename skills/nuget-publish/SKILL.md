@@ -74,12 +74,21 @@ git diff --name-only ${LAST_TAG}..HEAD
 git diff ${LAST_TAG}..HEAD -- "*.csproj"
 ```
 
+**Early exit — nothing to release:** If both `git log` and `git diff` produce no output, stop immediately and tell the user:
+
+```
+No commits or file changes found since <LAST_TAG>.
+Nothing to release. Exiting.
+```
+
+Do not proceed to Step 3.
+
 Summarize:
 - What interfaces or members were added, changed, or removed
 - Whether any NuGet dependency was bumped, and whether the bump is a **major** (breaking) version bump
 - Whether there are only infrastructure/CI/doc changes (patch-only)
 
-Then suggest a next version. Show the user a brief summary of changes (3–5 bullet points), the suggested tag, and ask for confirmation. See `references/versioning.md` for bump rules.
+Capture the summary as `CHANGES_SUMMARY` — a 3–5 bullet list that you'll reuse in the tag message (Step 6). Show the user this summary along with the suggested tag and ask for confirmation. See `references/versioning.md` for bump rules.
 
 ---
 
@@ -181,10 +190,17 @@ git pull
 
 ## Step 6 — Push the tag
 
+Create an annotated tag that embeds the `CHANGES_SUMMARY` from Step 2 so the changelog is preserved in git history:
+
 ```bash
-git tag <CONFIRMED_TAG>
+git tag -a <CONFIRMED_TAG> -m "Release <CONFIRMED_TAG>
+
+Changes since <LAST_TAG>:
+<CHANGES_SUMMARY>"
 git push origin <CONFIRMED_TAG>
 ```
+
+Replace `<CHANGES_SUMMARY>` with the bullet list captured in Step 2 (each bullet on its own line, prefixed with `•`).
 
 Tell the user: "Tag `<CONFIRMED_TAG>` pushed. CI will now build and publish the package. This typically takes a few minutes."
 
