@@ -206,11 +206,16 @@ git push origin <CONFIRMED_TAG>
 
 Replace `<CHANGES_SUMMARY>` with the bullet list captured in Step 2 (each bullet on its own line, prefixed with `•`).
 
-Tell the user: "Tag `<CONFIRMED_TAG>` pushed. CI will now build and publish the package. This typically takes a few minutes."
+Tell the user:
+> Tag `<CONFIRMED_TAG>` pushed. CI is now building and publishing the package. **The workflow is not finished yet** — I'll wait ~5 minutes and then open the baseline update PR. Please keep this conversation open.
+
+**Do not end the conversation here.** If `BASELINE_VERSION` was found in Step 1, Step 7 is required. Pause for ~5 minutes, then continue to Step 7 without waiting for the user to prompt you.
 
 ---
 
-## Step 7 — Update the baseline version
+## Step 7 — Update the baseline version (required when package validation is enabled)
+
+This step is **mandatory** when `PackageValidationBaselineVersion` was present in the csproj (i.e. `BASELINE_VERSION` is set). Skipping it means the next release compares against the wrong baseline and will produce false compatibility errors.
 
 Wait 5–7 minutes for the CI publish to complete, then:
 
