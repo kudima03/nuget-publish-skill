@@ -219,17 +219,35 @@ git pull
 
 ## Step 6 — Push the tag
 
-Create an annotated tag that embeds the `CHANGES_SUMMARY` from Step 2 so the changelog is preserved in git history:
+Create an annotated tag with the actual change bullets embedded in the message. **Do not use a placeholder — write the real bullet text directly into the heredoc before running the command.**
+
+Write the tag message to a temp file first, then tag from it. This guarantees the message is inspectable before the tag is pushed:
 
 ```bash
-git tag -a <CONFIRMED_TAG> -m "Release <CONFIRMED_TAG>
+cat > /tmp/tag-message.txt << 'ENDOFMESSAGE'
+Release <CONFIRMED_TAG>
 
 Changes since <LAST_TAG>:
-<CHANGES_SUMMARY>"
+• <bullet 1 from CHANGES_SUMMARY>
+• <bullet 2 from CHANGES_SUMMARY>
+• <bullet 3 from CHANGES_SUMMARY>
+ENDOFMESSAGE
+
+# Verify the message looks correct before tagging
+cat /tmp/tag-message.txt
+```
+
+Only after confirming the file contains the real bullets (not placeholder text), create and push the tag:
+
+```bash
+git tag -a <CONFIRMED_TAG> -F /tmp/tag-message.txt
 git push origin <CONFIRMED_TAG>
 ```
 
-Replace `<CHANGES_SUMMARY>` with the bullet list captured in Step 2 (each bullet on its own line, prefixed with `•`).
+**Checklist before pushing:**
+- [ ] `/tmp/tag-message.txt` contains the actual bullet text from Step 2 — no `<CHANGES_SUMMARY>` placeholder anywhere
+- [ ] Each bullet starts with `•` and is on its own line
+- [ ] First line is `Release <CONFIRMED_TAG>` (with the real tag number)
 
 Tell the user:
 > Tag `<CONFIRMED_TAG>` pushed. CI is now building and publishing the package. **The workflow is not finished yet** — I'll wait ~5 minutes and then open the baseline update PR. Please keep this conversation open.
