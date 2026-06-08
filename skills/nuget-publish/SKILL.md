@@ -17,6 +17,7 @@ This skill handles the complete release workflow for NuGet packages that use .NE
 6. If breaking changes detected: generate suppressions, open a PR, wait for user approval, merge
 7. Push the tag (triggers GitHub Actions publish to NuGet and GitHub Packages)
 8. After 5–7 minutes: update `PackageValidationBaselineVersion` in csproj, open a PR, wait for CI, merge
+9. Scan docs (README, markdown files) for old tag references, update them, open a separate PR
 
 Read `references/versioning.md` for the full versioning rules (tag formats, semver bumping logic, preview vs stable, dep-version propagation).
 Read `references/dotnet-compat.md` for how package validation and suppressions work.
@@ -253,8 +254,107 @@ gh pr checks <PR_NUMBER> --watch
 gh pr merge <PR_NUMBER> --squash --delete-branch
 ```
 
+After merging, proceed to Step 8.
+
+---
+
+## Step 8 — Update documentation references to the new tag
+
+After the baseline PR is merged, scan the project's documentation for hard-coded references to the old tag and update them to `<CONFIRMED_TAG>` in a separate PR.
+
+### 8a. Find files containing the old tag
+
+```bash
+# Collect all doc files that reference the old tag
+grep -rn --include="*.md" --include="*.txt" --include="*.rst" --include="*.adoc" \
+  "<LAST_TAG>" . \
+  --exclude-dir=.git \
+  --exclude-dir=obj \
+  --exclude-dir=bin \
+  -l
+```
+
+If the command returns no files, skip the rest of Step 8 and go straight to the completion summary.
+
+### 8b. Show the user what will change
+
+List every file that matched and show a short excerpt (file + line number + line content) for each occurrence:
+
+```bash
+grep -rn --include="*.md" --include="*.txt" --include="*.rst" --include="*.adoc" \
+  "<LAST_TAG>" . \
+  --exclude-dir=.git \
+  --exclude-dir=obj \
+  --exclude-dir=bin
+```
+
+Ask the user to confirm before proceeding:
+
+```
+Found references to <LAST_TAG> in the following files:
+<FILE_LIST_WITH_LINES>
+
+I'll replace all occurrences of "<LAST_TAG>" with "<CONFIRMED_TAG>" in these files and open a PR.
+Proceed? [y/N]
+```
+
+Wait for explicit confirmation.
+
+### 8c. Apply the replacements
+
+For each matched file, replace every occurrence of the old tag string with the new tag. Use `sed -i` for safety; do not touch binary files or files outside the project root.
+
+```bash
+# Replace old tag with new tag in each matched file
+for f in <MATCHED_FILES>; do
+  sed -i 's|<LAST_TAG>|<CONFIRMED_TAG>|g' "$f"
+done
+```
+
+After replacement, verify no old-tag occurrences remain:
+
+```bash
+grep -rn --include="*.md" --include="*.txt" --include="*.rst" --include="*.adoc" \
+  "<LAST_TAG>" . \
+  --exclude-dir=.git --exclude-dir=obj --exclude-dir=bin
+```
+
+If any remain, apply the replacement again or edit manually — do not open the PR until the check is clean.
+
+### 8d. Open the docs update PR
+
+```bash
+git checkout main
+git pull
+git checkout -b docs/update-refs-<CONFIRMED_TAG>
+git add <MATCHED_FILES>
+git commit -m "Update documentation references from <LAST_TAG> to <CONFIRMED_TAG>"
+git push -u origin docs/update-refs-<CONFIRMED_TAG>
+gh pr create \
+  --title "Update docs references to <CONFIRMED_TAG>" \
+  --body "$(cat <<'EOF'
+Update hard-coded version references in documentation from `<LAST_TAG>` to `<CONFIRMED_TAG>` following the release.
+
+## Files updated
+<MATCHED_FILES_LIST>
+EOF
+)"
+```
+
+### 8e. Wait for CI and merge
+
+```bash
+gh pr checks <PR_NUMBER> --watch
+gh pr merge <PR_NUMBER> --squash --delete-branch
+git checkout main
+git pull
+```
+
+---
+
 After merging, tell the user the full release is complete with a summary:
 - Tag pushed: `<CONFIRMED_TAG>`
 - Package: `<PACKAGE_NAME>`
 - Baseline updated from `<OLD_BASELINE>` → `<CONFIRMED_TAG>`
+- Docs updated: `<MATCHED_FILES_LIST>` (or "no doc references found" if Step 8 was skipped)
 - NuGet URL (if known)
