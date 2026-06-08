@@ -58,7 +58,7 @@ The user may want to switch series (e.g., cut a stable release from a preview se
 | Non-breaking dep update (dep minor/patch bump) | **MINOR** |
 | Bug fix, CI, docs, tooling only | **PATCH** |
 
-Use the **highest** applicable bump category across all changes.
+Evaluate **every** change and take the **highest** applicable bump as `MIN_REQUIRED_BUMP`. This is the floor — no tag below it is valid.
 
 ### For preview tags
 
@@ -71,10 +71,13 @@ Use the **highest** applicable bump category across all changes.
 ### Dependency version propagation
 
 If a NuGet dependency in the csproj was bumped:
-- **Major dep bump (x.0.0 → x+1.0.0)** → treat as a breaking change; bump this package's MAJOR (or PREV_MAJOR for preview)
-- **Minor/patch dep bump** → treat as a non-breaking feature update; bump MINOR (or PREV_MINOR for preview)
+- **Major dep bump (x.0.0 → x+1.0.0)** → treat as a breaking change; this **forces** `MIN_REQUIRED_BUMP = MAJOR` (or `PREV_MAJOR` for preview), regardless of any other changes
+- **Minor/patch dep bump** → treat as a non-breaking feature update; raises floor to at least MINOR (or `PREV_MINOR` for preview) unless a higher-priority change already sets MAJOR
 
-Look for `<PackageReference>` changes in the csproj diff to detect dep bumps.
+Look for `<PackageReference>` changes in the csproj diff to detect dep bumps. Parse the old and new version strings to classify the bump:
+- Old major ≠ new major → **major dep bump**
+- Old major = new major, old minor ≠ new minor → **minor dep bump**
+- Only patch changed → **patch dep bump**
 
 ---
 
@@ -84,4 +87,14 @@ Before confirming, validate the user-supplied or suggested tag:
 - Matches `^\d+\.\d+\.\d+$` for stable
 - Matches `^\d+\.\d+\.\d+-preview\.\d+\.\d+\.\d+$` for preview
 - Is strictly greater than the last tag (semver ordering; for preview, the stable prefix must be ≥ last stable, and the preview suffix must be strictly greater)
-- Is consistent with the detected change type (e.g., warn if suggesting a PATCH when breaking API changes were detected)
+- **Hard-rejects any tag whose bump level is below `MIN_REQUIRED_BUMP`** — do not accept or proceed with an undersized tag
+
+When the user supplies a custom tag that is below `MIN_REQUIRED_BUMP`, refuse it and explain why:
+
+```
+✗ Tag <USER_TAG> is a <ACTUAL_BUMP> bump, but changes require at least a <MIN_REQUIRED_BUMP> bump
+  because: <REASON> (e.g. "SomeDep was bumped 1.x → 2.x (major dep bump)").
+  Please provide a tag with a <MIN_REQUIRED_BUMP> bump or higher.
+```
+
+Never silently accept an undersized tag. Never downgrade `MIN_REQUIRED_BUMP` based on user preference — the floor is non-negotiable.
