@@ -90,10 +90,24 @@ Do not proceed to Step 3.
 
 Summarize (using only the project-scoped diff):
 - What interfaces or members were added, changed, or removed
-- Whether any NuGet dependency was bumped, and whether the bump is a **major** (breaking) version bump
+- Every NuGet dependency that was bumped: old version → new version, and whether the bump is major/minor/patch
 - Whether there are only infrastructure/CI/doc changes (patch-only)
 
-Capture the summary as `CHANGES_SUMMARY` — a 3–5 bullet list that you'll reuse in the tag message (Step 6). Show the user this summary along with the suggested tag and ask for confirmation. See `references/versioning.md` for bump rules.
+Then compute `MIN_REQUIRED_BUMP` by evaluating every change and taking the highest required bump level:
+
+| If any change is … | MIN_REQUIRED_BUMP |
+|---|---|
+| Removed/changed public API, or major dep bump | **MAJOR** |
+| New public type/member, or minor/patch dep bump (and nothing above) | **MINOR** |
+| Only bug fixes, CI, docs, tooling | **PATCH** |
+
+A single major dep bump **forces** `MIN_REQUIRED_BUMP = MAJOR` regardless of all other changes. See `references/versioning.md` for full dep-bump classification rules.
+
+Capture both:
+- `CHANGES_SUMMARY` — a 3–5 bullet list reused in the tag message (Step 6)
+- `MIN_REQUIRED_BUMP` — the computed floor, shown to the user alongside the suggested tag
+
+Show the user this summary along with the suggested tag and `MIN_REQUIRED_BUMP`, then ask for confirmation.
 
 ---
 
@@ -103,16 +117,26 @@ Present:
 ```
 Changes since 4.3.0:
 • Added IFoo interface
-• Bumped SomeDep 1.x → 2.x (breaking)
+• Bumped SomeDep 1.x → 2.x (major dep bump — breaking)
 • Updated CI workflow
 
-Suggested tag: 5.0.0  (major bump due to breaking dep)
+Minimum required bump: MAJOR  (reason: major dep bump SomeDep 1.x → 2.x)
+Suggested tag: 5.0.0  (major bump)
 Tag type: stable
 
 Confirm? [y/N / enter different tag]
 ```
 
-Wait for explicit confirmation or a custom tag. If the user provides a different tag, validate it matches the expected format (see `references/versioning.md`).
+Wait for explicit confirmation or a custom tag. If the user provides a different tag:
+1. Validate it matches the expected format (see `references/versioning.md`)
+2. **Hard-reject it if its bump level is below `MIN_REQUIRED_BUMP`** — explain which change forces the floor and ask for a corrected tag. Do not proceed until a valid tag is supplied.
+
+Example rejection:
+```
+✗ Tag 4.4.0 is a MINOR bump, but a MAJOR bump is required
+  because SomeDep was bumped 1.x → 2.x (major dep bump).
+  Please provide a tag ≥ 5.0.0.
+```
 
 ---
 
