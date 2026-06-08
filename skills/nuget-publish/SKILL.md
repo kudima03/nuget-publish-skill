@@ -230,9 +230,11 @@ curl -s "https://api.nuget.org/v3-flatcontainer/<package-id-lowercase>/index.jso
 
 ### 7b. Open baseline update PR
 
-Update `PackageValidationBaselineVersion` in the csproj:
+**Always start from a clean `main`** — regardless of which branch is currently checked out (e.g. after the suppressions flow in Step 5). Do not edit the csproj on the current branch.
 
 ```bash
+git checkout main
+git pull
 git checkout -b update-baseline/<CONFIRMED_TAG>
 # Edit <CSPROJ_PATH> — change PackageValidationBaselineVersion to <CONFIRMED_TAG>
 git add <CSPROJ_PATH>
