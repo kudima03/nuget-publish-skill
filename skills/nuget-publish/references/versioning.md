@@ -55,7 +55,8 @@ The user may want to switch series (e.g., cut a stable release from a preview se
 | Removed/changed public API member | **MAJOR** |
 | Breaking NuGet dependency update (dep major bump) | **MAJOR** |
 | New public type or member added | **MINOR** |
-| Non-breaking dep update (dep minor/patch bump) | **MINOR** |
+| Non-breaking dep update (dep minor bump) | **MINOR** |
+| Non-breaking dep update (dep patch bump) | **PATCH** |
 | Bug fix, CI, docs, tooling only | **PATCH** |
 
 Evaluate **every** change and take the **highest** applicable bump as `MIN_REQUIRED_BUMP`. This is the floor — no tag below it is valid.
@@ -72,7 +73,8 @@ Evaluate **every** change and take the **highest** applicable bump as `MIN_REQUI
 
 If a NuGet dependency in the csproj was bumped:
 - **Major dep bump (x.0.0 → x+1.0.0)** → treat as a breaking change; this **forces** `MIN_REQUIRED_BUMP = MAJOR` (or `PREV_MAJOR` for preview), regardless of any other changes
-- **Minor/patch dep bump** → treat as a non-breaking feature update; raises floor to at least MINOR (or `PREV_MINOR` for preview) unless a higher-priority change already sets MAJOR
+- **Minor dep bump** → treat as a non-breaking feature update; raises floor to at least MINOR (or `PREV_MINOR` for preview) unless a higher-priority change already sets MAJOR
+- **Patch dep bump** → treat as a non-breaking fix update; raises floor to at least PATCH (or `PREV_PATCH` for preview) unless a higher-priority change already sets MINOR or MAJOR
 
 Look for `<PackageReference>` changes in the csproj diff to detect dep bumps. Parse the old and new version strings to classify the bump:
 - Old major ≠ new major → **major dep bump**

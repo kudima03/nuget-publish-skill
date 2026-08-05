@@ -98,8 +98,8 @@ Then compute `MIN_REQUIRED_BUMP` by evaluating every change and taking the highe
 | If any change is … | MIN_REQUIRED_BUMP |
 |---|---|
 | Removed/changed public API, or major dep bump | **MAJOR** |
-| New public type/member, or minor/patch dep bump (and nothing above) | **MINOR** |
-| Only bug fixes, CI, docs, tooling | **PATCH** |
+| New public type/member, or minor dep bump (and nothing above) | **MINOR** |
+| Only bug fixes, CI, docs, tooling, or patch dep bump (and nothing above) | **PATCH** |
 
 A single major dep bump **forces** `MIN_REQUIRED_BUMP = MAJOR` regardless of all other changes. See `references/versioning.md` for full dep-bump classification rules.
 
