@@ -18,6 +18,7 @@ This skill handles the complete release workflow for NuGet packages that use .NE
 7. Push the tag (triggers GitHub Actions publish to NuGet and GitHub Packages)
 8. After 5–7 minutes: update `PackageValidationBaselineVersion` in csproj, open a PR, wait for CI, merge
 9. Scan docs (README, markdown files) for old tag references, update them, open a separate PR
+10. If a changelog file is present, use the `changelog-generator` skill to add a new section for the release, open a separate PR
 
 Read `references/versioning.md` for the full versioning rules (tag formats, semver bumping logic, preview vs stable, dep-version propagation).
 Read `references/dotnet-compat.md` for how package validation and suppressions work.
@@ -318,7 +319,7 @@ grep -rn --include="*.md" --include="*.txt" --include="*.rst" --include="*.adoc"
   -l
 ```
 
-If the command returns no files, skip the rest of Step 8 and go straight to the completion summary.
+If the command returns no files, skip the rest of Step 8 and proceed to Step 9.
 
 ### 8b. Show the user what will change
 
@@ -394,6 +395,50 @@ git checkout main
 git pull
 ```
 
+After merging, proceed to Step 9.
+
+---
+
+## Step 9 — Update the changelog (if present)
+
+Check for a changelog file at the repo root:
+
+```bash
+ls CHANGELOG.md CHANGELOG.rst CHANGES.md 2>/dev/null
+```
+
+If none exist, skip this step and go straight to the completion summary.
+
+### 9a. Generate the new section
+
+If a changelog file exists, use the `changelog-generator` skill to generate a new section covering the same range analyzed in Step 2 (`<LAST_TAG>..<CONFIRMED_TAG>`), titled with `<CONFIRMED_TAG>` and today's date. Prepend it above the file's existing entries — never overwrite or reorder prior entries, and follow the file's existing heading style/format.
+
+### 9b. Open the changelog PR
+
+```bash
+git checkout main
+git pull
+git checkout -b changelog/<CONFIRMED_TAG>
+git add CHANGELOG.md
+git commit -m "Update changelog for <CONFIRMED_TAG>"
+git push -u origin changelog/<CONFIRMED_TAG>
+gh pr create \
+  --title "Update changelog for <CONFIRMED_TAG>" \
+  --body "$(cat <<'EOF'
+Add a changelog entry for <CONFIRMED_TAG>, generated from the commits since <LAST_TAG>.
+EOF
+)"
+```
+
+### 9c. Wait for CI and merge
+
+```bash
+gh pr checks <PR_NUMBER> --watch
+gh pr merge <PR_NUMBER> --squash --delete-branch
+git checkout main
+git pull
+```
+
 ---
 
 After merging, tell the user the full release is complete with a summary:
@@ -401,4 +446,5 @@ After merging, tell the user the full release is complete with a summary:
 - Package: `<PACKAGE_NAME>`
 - Baseline updated from `<OLD_BASELINE>` → `<CONFIRMED_TAG>`
 - Docs updated: `<MATCHED_FILES_LIST>` (or "no doc references found" if Step 8 was skipped)
+- Changelog updated (or "no changelog file found" if Step 9 was skipped)
 - NuGet URL (if known)
