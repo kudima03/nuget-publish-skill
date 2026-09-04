@@ -8,7 +8,7 @@ Works with any .NET project that uses `EnablePackageValidation`.
 
 | Type | Name | Description |
 |---|---|---|
-| Skill | `nuget-publish` | Auto-triggered publish workflow: version analysis, API compat check, suppressions PR, tag push, baseline update |
+| Skill | `nuget-publish` | Auto-triggered publish workflow: version analysis, API compat check, suppressions PR, tag push, baseline update, changelog generation |
 | Command | `/nuget-publish` | Explicitly kick off the publish workflow |
 
 ## Per-repo overrides and additions
@@ -41,6 +41,7 @@ For this repo, always default to preview tags.
 - [Claude Code](https://claude.ai/code)
 - `gh` (GitHub CLI) authenticated
 - `dotnet` SDK
+- [`changelog-generator-skill`](https://github.com/kudima03/changelog-generator-skill) installed, if the repo has a changelog file (`CHANGELOG.md`/`.rst`) you want kept up to date on release
 
 ## License
 
